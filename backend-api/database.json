@@ -1,0 +1,44 @@
+﻿{
+  "immigrants": [
+    {
+      "id": 1,
+      "name": "Ahmed Ali",
+      "country": "Somalia",
+      "region": "Woqooyi Galbeed",
+      "entry_point": "Wajaale",
+      "district": "Hargeysa",
+      "status": "registered",
+      "registered_at": "2026-01-15T10:30:00"
+    },
+    {
+      "id": 2,
+      "name": "Maryam Khaire",
+      "country": "Kenya",
+      "region": "Nairobi",
+      "entry_point": "Dolow",
+      "district": "Kismaayo",
+      "status": "registered",
+      "registered_at": "2026-01-15T11:15:00"
+    }
+  ],
+  "officers": [
+    {
+      "id": 1,
+      "name": "Xasan Cali",
+      "office": "Wajaale",
+      "border": "Xudduudka Wajaale",
+      "country": "Somalia",
+      "status": "active"
+    }
+  ],
+  "admins": [
+    {
+      "id": 1,
+      "name": "Dr. Axmed Cali",
+      "role": "Maamulaha Guud",
+      "office": "Muqdisho",
+      "status": "active"
+    }
+  ],
+  "scan_history": []
+}

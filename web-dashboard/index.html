@@ -1,0 +1,778 @@
+﻿<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diwaanka Ajaanibka - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0e1a; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; color: #fff; }
+        .glass { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; }
+        .sidebar { background: rgba(10, 14, 26, 0.95); border-right: 1px solid rgba(255, 255, 255, 0.06); min-height: 100vh; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; color: #94a3b8; transition: all 0.3s ease; cursor: pointer; text-decoration: none; }
+        .sidebar-link:hover { background: rgba(59, 130, 246, 0.1); color: #fff; }
+        .sidebar-link.active { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .stat-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 20px 24px; transition: all 0.3s ease; }
+        .stat-card:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-4px); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .upload-zone { border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .upload-zone:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .status-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-warning { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+        .status-error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        .face-box { background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .face-number { background: #3b82f6; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+        .country-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; transition: all 0.3s ease; }
+        .country-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        .region-tag { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 2px 10px; font-size: 11px; color: #60a5fa; display: inline-block; }
+        .entry-point { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.15); border-radius: 6px; padding: 2px 10px; font-size: 11px; color: #fbbf24; display: inline-block; }
+        .somaliland-region { background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.12); border-radius: 8px; padding: 8px 14px; display: inline-block; font-size: 12px; color: #4ade80; }
+        .office-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; transition: all 0.3s ease; }
+        .office-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+        .badge-count { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-radius: 20px; padding: 2px 10px; font-size: 11px; }
+        .country-population { color: #94a3b8; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div class="flex">
+    <aside class="sidebar w-64 flex-shrink-0 hidden lg:block">
+        <div class="p-6 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                    <i class="fas fa-id-card text-blue-400 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white">Diwaanka</h1>
+                    <p class="text-xs text-gray-500">Ajaanibka System</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4 space-y-1">
+            <a class="sidebar-link active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a class="sidebar-link" data-page="admin" onclick="showPage('admin')"><i class="fas fa-user-shield"></i> Maamulka Sare</a>
+            <a class="sidebar-link" data-page="officers" onclick="showPage('officers')"><i class="fas fa-user-tie"></i> Askarta Goobta</a>
+            <a class="sidebar-link" data-page="immigrants" onclick="showPage('immigrants')"><i class="fas fa-users"></i> Ajaanibta</a>
+            <a class="sidebar-link" data-page="countries" onclick="showPage('countries')"><i class="fas fa-globe-africa"></i> Wadamada</a>
+            <a class="sidebar-link" data-page="somaliland" onclick="showPage('somaliland')"><i class="fas fa-map-marked-alt"></i> Somaliland</a>
+            <a class="sidebar-link" data-page="offices" onclick="showPage('offices')"><i class="fas fa-building"></i> Xafiisyada</a>
+            <a class="sidebar-link" data-page="scan" onclick="showPage('scan')"><i class="fas fa-camera"></i> Weji-Aqoonsi</a>
+            <div class="border-t border-white/5 my-4 pt-4">
+                <a class="sidebar-link" onclick="logout()"><i class="fas fa-sign-out-alt text-red-400"></i><span class="text-red-400">Ka Bax</span></a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-4 lg:p-8 overflow-x-hidden">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-white" id="pageTitle">Dashboard</h2>
+                <p class="text-gray-400 text-sm" id="pageSubtitle">Ku soo dhawaada nidaamka Diwaanka Ajaanibka</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="apiStatus" class="flex items-center gap-2 text-sm">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" id="statusDot"></span>
+                    <span class="text-gray-400" id="statusText">Loading...</span>
+                </span>
+                <div class="flex items-center gap-3 bg-white/5 rounded-full px-4 py-2 border border-white/5">
+                    <i class="fas fa-user-circle text-gray-400 text-xl"></i>
+                    <span class="text-sm text-gray-300">Admin</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-dashboard" class="page-content active">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Wadar Ajaanib</p>
+                            <p class="text-3xl font-bold text-white mt-1">2,847</p>
+                            <span class="text-emerald-400 text-xs">+15.3%</span>
+                        </div>
+                        <div class="stat-icon bg-blue-500/10 text-blue-400"><i class="fas fa-users"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Soo Galay Maanta</p>
+                            <p class="text-3xl font-bold text-white mt-1">94</p>
+                            <span class="text-emerald-400 text-xs">+12.5%</span>
+                        </div>
+                        <div class="stat-icon bg-emerald-500/10 text-emerald-400"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Ka Baxay Maanta</p>
+                            <p class="text-3xl font-bold text-white mt-1">51</p>
+                            <span class="text-amber-400 text-xs">+8.7%</span>
+                        </div>
+                        <div class="stat-icon bg-amber-500/10 text-amber-400"><i class="fas fa-arrow-left"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Wadamada</p>
+                            <p class="text-3xl font-bold text-white mt-1">197</p>
+                            <span class="text-blue-400 text-xs">Adduunka</span>
+                        </div>
+                        <div class="stat-icon bg-purple-500/10 text-purple-400"><i class="fas fa-globe"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Dadka Adduunka</p>
+                            <p class="text-3xl font-bold text-white mt-1">8.1B</p>
+                            <span class="text-cyan-400 text-xs">+1.2%</span>
+                        </div>
+                        <div class="stat-icon bg-cyan-500/10 text-cyan-400"><i class="fas fa-globe-asia"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass p-6">
+                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-line text-blue-400 mr-2"></i>Soo Galitaanka Toddobaadka</h3>
+                    <canvas id="weeklyChart" height="200"></canvas>
+                </div>
+                <div class="glass p-6">
+                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-pie text-purple-400 mr-2"></i>Wadamada Ugu Badan</h3>
+                    <canvas id="countryChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="text-white font-semibold mb-4"><i class="fas fa-clock text-amber-400 mr-2"></i>Dhaqdhaqaaqii Ugu Dambeeyay</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">AA</div>
+                            <div>
+                                <p class="text-white text-sm">Ahmed Ali - <span class="text-gray-400 text-xs">Somalia</span></p>
+                                <p class="text-gray-500 text-xs">Soo galay xudduudka <span class="entry-point">Wajaale</span></p>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 text-xs">5 daqiiqo ka hor</span>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">MK</div>
+                            <div>
+                                <p class="text-white text-sm">Maryam Khaire - <span class="text-gray-400 text-xs">Kenya</span></p>
+                                <p class="text-gray-500 text-xs">Ka baxday xudduudka <span class="entry-point">Dolow</span></p>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 text-xs">15 daqiiqo ka hor</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-sm">JD</div>
+                            <div>
+                                <p class="text-white text-sm">John Doe - <span class="text-gray-400 text-xs">UK</span></p>
+                                <p class="text-gray-500 text-xs">Soo galay xudduudka <span class="entry-point">Berbera</span></p>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 text-xs">1 saac ka hor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-admin" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-user-shield text-blue-400 mr-2"></i>Maamulka Sare</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadarta</p><p class="text-2xl font-bold text-white">18</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Shaqeeya</p><p class="text-2xl font-bold text-emerald-400">14</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Fasaxa</p><p class="text-2xl font-bold text-amber-400">4</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Xafiisyada</p><p class="text-2xl font-bold text-blue-400">12</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Liiska Maamulayaasha</h4>
+                <table class="w-full text-left">
+                    <thead class="border-b border-white/10">
+                        <tr>
+                            <th class="pb-3 text-gray-400 text-sm">Magac</th>
+                            <th class="pb-3 text-gray-400 text-sm">Door</th>
+                            <th class="pb-3 text-gray-400 text-sm">Xafiis</th>
+                            <th class="pb-3 text-gray-400 text-sm">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Dr. Axmed Cali</td>
+                            <td class="py-3 text-gray-300">Maamulaha Guud</td>
+                            <td class="py-3 text-gray-300">Muqdisho</td>
+                            <td class="py-3"><span class="status-badge status-success">Shaqeynaya</span></td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Fadumo Xasan</td>
+                            <td class="py-3 text-gray-300">Kuxigeen</td>
+                            <td class="py-3 text-gray-300">Hargeysa</td>
+                            <td class="py-3"><span class="status-badge status-success">Shaqeynaya</span></td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 text-white">Cumar Cabdi</td>
+                            <td class="py-3 text-gray-300">Maamule</td>
+                            <td class="py-3 text-gray-300">Kismaayo</td>
+                            <td class="py-3"><span class="status-badge status-warning">Fasax</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="page-officers" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-user-tie text-emerald-400 mr-2"></i>Askarta Goobta</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadarta</p><p class="text-2xl font-bold text-white">86</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Goobta</p><p class="text-2xl font-bold text-emerald-400">62</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Xuduudaha</p><p class="text-2xl font-bold text-amber-400">28</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadamada</p><p class="text-2xl font-bold text-blue-400">22</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Liiska Askarta</h4>
+                <table class="w-full text-left">
+                    <thead class="border-b border-white/10">
+                        <tr>
+                            <th class="pb-3 text-gray-400 text-sm">Magac</th>
+                            <th class="pb-3 text-gray-400 text-sm">Xafiis</th>
+                            <th class="pb-3 text-gray-400 text-sm">Xudduud</th>
+                            <th class="pb-3 text-gray-400 text-sm">Wadan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Xasan Cali</td>
+                            <td class="py-3 text-gray-300">Wajaale</td>
+                            <td class="py-3"><span class="entry-point">Xudduudka Wajaale</span></td>
+                            <td class="py-3 text-gray-300">🇸🇴 Somalia</td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Amina Hassan</td>
+                            <td class="py-3 text-gray-300">Dolow</td>
+                            <td class="py-3"><span class="entry-point">Xudduudka Dolow</span></td>
+                            <td class="py-3 text-gray-300">🇰🇪 Kenya</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 text-white">Muse Ahmed</td>
+                            <td class="py-3 text-gray-300">Berbera</td>
+                            <td class="py-3"><span class="entry-point">Dekedda Berbera</span></td>
+                            <td class="py-3 text-gray-300">🇪🇹 Ethiopia</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="page-immigrants" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-users text-blue-400 mr-2"></i>Ajaanibta</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadarta</p><p class="text-2xl font-bold text-white">2,847</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Gobollada</p><p class="text-2xl font-bold text-emerald-400">48</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Xuduudaha</p><p class="text-2xl font-bold text-amber-400">32</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Degmooyinka</p><p class="text-2xl font-bold text-purple-400">156</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Liiska Ajaanibta</h4>
+                <table class="w-full text-left">
+                    <thead class="border-b border-white/10">
+                        <tr>
+                            <th class="pb-3 text-gray-400 text-sm">Magac</th>
+                            <th class="pb-3 text-gray-400 text-sm">Dalka</th>
+                            <th class="pb-3 text-gray-400 text-sm">Gobolka</th>
+                            <th class="pb-3 text-gray-400 text-sm">Xudduudda</th>
+                            <th class="pb-3 text-gray-400 text-sm">Degmada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Ahmed Ali</td>
+                            <td class="py-3 text-gray-300">🇸🇴 Somalia</td>
+                            <td class="py-3"><span class="region-tag">Woqooyi Galbeed</span></td>
+                            <td class="py-3"><span class="entry-point">Wajaale</span></td>
+                            <td class="py-3 text-gray-300">Hargeysa</td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 text-white">Maryam Khaire</td>
+                            <td class="py-3 text-gray-300">🇰🇪 Kenya</td>
+                            <td class="py-3"><span class="region-tag">Nairobi</span></td>
+                            <td class="py-3"><span class="entry-point">Dolow</span></td>
+                            <td class="py-3 text-gray-300">Kismaayo</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 text-white">John Doe</td>
+                            <td class="py-3 text-gray-300">🇬🇧 UK</td>
+                            <td class="py-3"><span class="region-tag">London</span></td>
+                            <td class="py-3"><span class="entry-point">Berbera</span></td>
+                            <td class="py-3 text-gray-300">Berbera</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="page-countries" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-globe-africa text-purple-400 mr-2"></i>Wadamada Adduunka (197)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadamada</p><p class="text-2xl font-bold text-white">197</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Dadka Adduunka</p><p class="text-2xl font-bold text-blue-400">8.1B</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Ugu Badan</p><p class="text-2xl font-bold text-emerald-400">India</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Ugu Yar</p><p class="text-2xl font-bold text-amber-400">Vatican</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Celcelis</p><p class="text-2xl font-bold text-purple-400">41M</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Liiska Wadamada</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2" id="countriesList"></div>
+            </div>
+        </div>
+
+        <div id="page-somaliland" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-map-marked-alt text-emerald-400 mr-2"></i>Gobollada Somaliland</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Gobollada</p><p class="text-2xl font-bold text-white">6</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Degmooyinka</p><p class="text-2xl font-bold text-blue-400">24</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Ajaanibta</p><p class="text-2xl font-bold text-emerald-400">1,847</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Xuduudaha</p><p class="text-2xl font-bold text-amber-400">8</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Gobollada Somaliland</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="somalilandRegions"></div>
+            </div>
+        </div>
+
+        <div id="page-offices" class="page-content">
+            <div class="glass p-6 mb-6">
+                <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-building text-cyan-400 mr-2"></i>Xafiisyada</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadarta</p><p class="text-2xl font-bold text-white">45</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Gudaha</p><p class="text-2xl font-bold text-blue-400">28</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Dibadda</p><p class="text-2xl font-bold text-emerald-400">17</p></div>
+                    <div class="bg-white/5 rounded-xl p-4"><p class="text-gray-400 text-sm">Wadamada</p><p class="text-2xl font-bold text-amber-400">15</p></div>
+                </div>
+            </div>
+            <div class="glass p-6">
+                <h4 class="text-white font-semibold mb-4">Liiska Xafiisyada</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="officesList"></div>
+            </div>
+        </div>
+
+        <div id="page-scan" class="page-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6">
+                    <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-camera text-blue-400 mr-2"></i>Weji-Aqoonsi</h3>
+                    <div id="uploadZone" class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                <i class="fas fa-cloud-upload-alt text-blue-400 text-3xl"></i>
+                            </div>
+                            <p class="text-gray-300 font-medium">Riix ama soo jiid sawir</p>
+                            <p class="text-gray-500 text-sm">JPG, PNG - Ilaa 10MB</p>
+                            <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+                        </div>
+                    </div>
+                    <div id="previewContainer" class="hidden mt-4">
+                        <div class="relative rounded-xl overflow-hidden bg-black/50">
+                            <img id="previewImage" class="w-full max-h-80 object-contain" alt="Sawirka" />
+                            <button onclick="clearImage()" class="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-lg">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="actionButtons" class="hidden flex gap-3 mt-4">
+                        <button onclick="scanFace()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-search"></i> Aqoonso
+                        </button>
+                        <button onclick="detectFaces()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-vector-square"></i> Soo Bandhig
+                        </button>
+                    </div>
+                    <div id="loadingSpinner" class="hidden mt-4 text-center py-8">
+                        <div class="spinner"></div>
+                        <p class="text-gray-400 mt-3">Fadlan sug...</p>
+                    </div>
+                </div>
+                <div class="glass p-6">
+                    <h3 class="text-white font-semibold text-lg mb-4"><i class="fas fa-file-alt text-purple-400 mr-2"></i>Natiijooyinka</h3>
+                    <div id="resultPlaceholder" class="text-center py-12">
+                        <i class="fas fa-image text-4xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-400">Sawir soo gal si aad u aragto natiijooyinka</p>
+                    </div>
+                    <div id="resultContent" class="hidden">
+                        <div id="resultStatus" class="mb-4"></div>
+                        <div id="resultMessage" class="text-gray-300 text-sm mb-4"></div>
+                        <div id="faceDetails" class="space-y-2"></div>
+                        <div id="detectedImageContainer" class="hidden mt-4">
+                            <p class="text-gray-400 text-sm mb-2">Sawirka oo leh calaamado:</p>
+                            <img id="detectedImage" class="rounded-xl w-full max-h-80 object-contain border border-white/10" alt="Wejiyada" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const allCountries = [
+    { name: 'Afghanistan', flag: '🇦🇫', population: '38.9M' },
+    { name: 'Albania', flag: '🇦🇱', population: '2.8M' },
+    { name: 'Algeria', flag: '🇩🇿', population: '44.6M' },
+    { name: 'Angola', flag: '🇦🇴', population: '33.0M' },
+    { name: 'Argentina', flag: '🇦🇷', population: '45.4M' },
+    { name: 'Australia', flag: '🇦🇺', population: '25.7M' },
+    { name: 'Austria', flag: '🇦🇹', population: '9.0M' },
+    { name: 'Bangladesh', flag: '🇧🇩', population: '164.7M' },
+    { name: 'Belgium', flag: '🇧🇪', population: '11.6M' },
+    { name: 'Brazil', flag: '🇧🇷', population: '212.6M' },
+    { name: 'Canada', flag: '🇨🇦', population: '38.0M' },
+    { name: 'China', flag: '🇨🇳', population: '1.41B' },
+    { name: 'Denmark', flag: '🇩🇰', population: '5.8M' },
+    { name: 'Djibouti', flag: '🇩🇯', population: '988K' },
+    { name: 'Egypt', flag: '🇪🇬', population: '102.3M' },
+    { name: 'Ethiopia', flag: '🇪🇹', population: '114.9M' },
+    { name: 'Finland', flag: '🇫🇮', population: '5.5M' },
+    { name: 'France', flag: '🇫🇷', population: '65.3M' },
+    { name: 'Germany', flag: '🇩🇪', population: '83.2M' },
+    { name: 'Ghana', flag: '🇬🇭', population: '31.1M' },
+    { name: 'India', flag: '🇮🇳', population: '1.38B' },
+    { name: 'Indonesia', flag: '🇮🇩', population: '273.5M' },
+    { name: 'Iran', flag: '🇮🇷', population: '83.9M' },
+    { name: 'Iraq', flag: '🇮🇶', population: '40.2M' },
+    { name: 'Italy', flag: '🇮🇹', population: '60.4M' },
+    { name: 'Japan', flag: '🇯🇵', population: '125.8M' },
+    { name: 'Kenya', flag: '🇰🇪', population: '53.8M' },
+    { name: 'Kuwait', flag: '🇰🇼', population: '4.3M' },
+    { name: 'Malaysia', flag: '🇲🇾', population: '32.4M' },
+    { name: 'Mexico', flag: '🇲🇽', population: '128.9M' },
+    { name: 'Morocco', flag: '🇲🇦', population: '36.9M' },
+    { name: 'Netherlands', flag: '🇳🇱', population: '17.1M' },
+    { name: 'New Zealand', flag: '🇳🇿', population: '4.8M' },
+    { name: 'Nigeria', flag: '🇳🇬', population: '206.1M' },
+    { name: 'Norway', flag: '🇳🇴', population: '5.4M' },
+    { name: 'Pakistan', flag: '🇵🇰', population: '220.9M' },
+    { name: 'Philippines', flag: '🇵🇭', population: '109.6M' },
+    { name: 'Poland', flag: '🇵🇱', population: '38.3M' },
+    { name: 'Portugal', flag: '🇵🇹', population: '10.3M' },
+    { name: 'Qatar', flag: '🇶🇦', population: '2.9M' },
+    { name: 'Russia', flag: '🇷🇺', population: '145.9M' },
+    { name: 'Saudi Arabia', flag: '🇸🇦', population: '34.8M' },
+    { name: 'Somalia', flag: '🇸🇴', population: '15.9M' },
+    { name: 'South Africa', flag: '🇿🇦', population: '59.3M' },
+    { name: 'South Korea', flag: '🇰🇷', population: '51.8M' },
+    { name: 'Spain', flag: '🇪🇸', population: '47.4M' },
+    { name: 'Sudan', flag: '🇸🇩', population: '43.8M' },
+    { name: 'Sweden', flag: '🇸🇪', population: '10.4M' },
+    { name: 'Switzerland', flag: '🇨🇭', population: '8.6M' },
+    { name: 'Tanzania', flag: '🇹🇿', population: '59.7M' },
+    { name: 'Thailand', flag: '🇹🇭', population: '69.8M' },
+    { name: 'Turkey', flag: '🇹🇷', population: '84.3M' },
+    { name: 'UAE', flag: '🇦🇪', population: '9.9M' },
+    { name: 'Uganda', flag: '🇺🇬', population: '45.7M' },
+    { name: 'UK', flag: '🇬🇧', population: '67.2M' },
+    { name: 'USA', flag: '🇺🇸', population: '331.9M' },
+    { name: 'Yemen', flag: '🇾🇪', population: '29.8M' },
+    { name: 'Zambia', flag: '🇿🇲', population: '18.4M' },
+    { name: 'Zimbabwe', flag: '🇿🇼', population: '14.9M' }
+];
+
+const somalilandRegions = [
+    { name: 'Awdal', capital: 'Borama', districts: ['Borama', 'Baki', 'Lughaya', 'Dilla'], borders: ['Wajaale', 'Tog Wajaale'], immigrants: 285 },
+    { name: 'Maroodi Jeex', capital: 'Hargeysa', districts: ['Hargeysa', 'Gabiley', 'Salahley'], borders: ['Wajaale', 'Tog Wajaale'], immigrants: 520 },
+    { name: 'Sanaag', capital: 'Erigavo', districts: ['Erigavo', 'Badhan', 'Las Qorey'], borders: ['Xingalool', 'Las Qorey'], immigrants: 175 },
+    { name: 'Sool', capital: 'Las Anod', districts: ['Las Anod', 'Taleh', 'Hudun'], borders: ['Xudun', 'Boame'], immigrants: 145 },
+    { name: 'Togdheer', capital: 'Burco', districts: ['Burco', 'Oodweyne', 'Buuhoodle'], borders: ['Buuhoodle', 'Duruqsi'], immigrants: 230 },
+    { name: 'Saaxil', capital: 'Berbera', districts: ['Berbera', 'Sheikh', 'Bulhar'], borders: ['Berbera', 'Bulhar'], immigrants: 492 }
+];
+
+const offices = [
+    { name: 'Xafiiska Muqdisho', country: 'Somalia', city: 'Muqdisho', type: 'Gudaha', staff: 24 },
+    { name: 'Xafiiska Hargeysa', country: 'Somaliland', city: 'Hargeysa', type: 'Gudaha', staff: 18 },
+    { name: 'Xafiiska Berbera', country: 'Somaliland', city: 'Berbera', type: 'Gudaha', staff: 12 },
+    { name: 'Xafiiska Burco', country: 'Somaliland', city: 'Burco', type: 'Gudaha', staff: 10 },
+    { name: 'Xafiiska Borama', country: 'Somaliland', city: 'Borama', type: 'Gudaha', staff: 8 },
+    { name: 'Xafiiska Nairobi', country: 'Kenya', city: 'Nairobi', type: 'Dibadda', staff: 15 },
+    { name: 'Xafiiska Addis Ababa', country: 'Ethiopia', city: 'Addis Ababa', type: 'Dibadda', staff: 12 },
+    { name: 'Xafiiska London', country: 'UK', city: 'London', type: 'Dibadda', staff: 20 },
+    { name: 'Xafiiska Washington', country: 'USA', city: 'Washington DC', type: 'Dibadda', staff: 18 },
+    { name: 'Xafiiska Dubai', country: 'UAE', city: 'Dubai', type: 'Dibadda', staff: 14 },
+    { name: 'Xafiiska Riyadh', country: 'Saudi Arabia', city: 'Riyadh', type: 'Dibadda', staff: 10 },
+    { name: 'Xafiiska Wajaale', country: 'Somaliland', city: 'Wajaale', type: 'Xudduud', staff: 14 }
+];
+
+const state = { file: null, apiBase: 'http://127.0.0.1:8000', currentPage: 'dashboard' };
+
+function $(id) { return document.getElementById(id); }
+
+function showPage(page) {
+    document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+    const target = $('page-' + page);
+    if (target) target.classList.add('active');
+    const link = document.querySelector('.sidebar-link[data-page="' + page + '"]');
+    if (link) link.classList.add('active');
+    state.currentPage = page;
+    const titles = {
+        dashboard: ['Dashboard', 'Ku soo dhawaada nidaamka'],
+        admin: ['Maamulka Sare', 'Maamulayaasha'],
+        officers: ['Askarta Goobta', 'Askarta xuduudaha'],
+        immigrants: ['Ajaanibta', 'Liiska ajaanibta'],
+        countries: ['Wadamada Adduunka', '197 wadan'],
+        somaliland: ['Gobollada Somaliland', '6 gobol'],
+        offices: ['Xafiisyada', 'Liiska xafiisyada'],
+        scan: ['Weji-Aqoonsi', 'Aqoonso wejiyada']
+    };
+    const t = titles[page] || ['Page', ''];
+    $('pageTitle').textContent = t[0];
+    $('pageSubtitle').textContent = t[1];
+    if (page === 'countries') renderCountries();
+    if (page === 'somaliland') renderSomaliland();
+    if (page === 'offices') renderOffices();
+    if (page === 'dashboard') setTimeout(initCharts, 100);
+}
+
+function renderCountries() {
+    const c = $('countriesList');
+    if (!c) return;
+    c.innerHTML = allCountries.map(x => '<div class="country-card"><div class="flex items-center gap-2"><span class="text-xl">' + x.flag + '</span><div class="flex-1 min-w-0"><p class="text-gray-300 text-sm truncate">' + x.name + '</p><p class="country-population">' + x.population + '</p></div></div></div>').join('');
+}
+
+function renderSomaliland() {
+    const c = $('somalilandRegions');
+    if (!c) return;
+    c.innerHTML = somalilandRegions.map(r => '<div class="glass p-4"><div class="flex items-center justify-between mb-2"><h4 class="text-white font-semibold">' + r.name + '</h4><span class="somaliland-region">' + r.immigrants + ' Ajaanib</span></div><p class="text-gray-400 text-sm mb-1"><i class="fas fa-city text-amber-400 mr-1"></i> ' + r.capital + '</p><p class="text-gray-400 text-sm mb-1"><i class="fas fa-map-pin text-blue-400 mr-1"></i> ' + r.districts.join(', ') + '</p><p class="text-gray-400 text-sm"><i class="fas fa-border-all text-emerald-400 mr-1"></i> ' + r.borders.map(b => '<span class="entry-point">' + b + '</span>').join(' ') + '</p></div>').join('');
+}
+
+function renderOffices() {
+    const c = $('officesList');
+    if (!c) return;
+    c.innerHTML = offices.map(o => '<div class="office-card"><div class="flex items-start justify-between mb-2"><div><h4 class="text-white font-semibold">' + o.name + '</h4><p class="text-gray-400 text-sm">' + o.city + ', ' + o.country + '</p></div><span class="badge-count">' + o.staff + ' staff</span></div><span class="text-xs text-blue-400">' + o.type + '</span></div>').join('');
+}
+
+let weeklyChartInstance = null;
+let countryChartInstance = null;
+
+function initCharts() {
+    const wc = document.getElementById('weeklyChart')?.getContext('2d');
+    if (wc) {
+        if (weeklyChartInstance) weeklyChartInstance.destroy();
+        weeklyChartInstance = new Chart(wc, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    { label: 'Soo Galay', data: [24, 38, 30, 44, 36, 60, 94], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4 },
+                    { label: 'Ka Baxay', data: [16, 24, 20, 30, 28, 40, 51], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } } } }
+        });
+    }
+    const cc = document.getElementById('countryChart')?.getContext('2d');
+    if (cc) {
+        if (countryChartInstance) countryChartInstance.destroy();
+        countryChartInstance = new Chart(cc, {
+            type: 'doughnut',
+            data: {
+                labels: ['Somalia', 'Kenya', 'Ethiopia', 'Djibouti', 'UK', 'USA', 'Other'],
+                datasets: [{ data: [620, 410, 380, 195, 220, 185, 837], backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#6b7280'], borderWidth: 2, borderColor: '#0a0e1a' }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } } }
+        });
+    }
+}
+
+async function checkApiStatus() {
+    try {
+        const r = await fetch(state.apiBase + '/health');
+        if (r.ok) {
+            $('statusDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+            $('statusText').textContent = 'API waa shaqeynayaa';
+            $('statusText').className = 'text-emerald-400';
+        } else throw new Error();
+    } catch {
+        $('statusDot').className = 'w-2 h-2 rounded-full bg-red-500';
+        $('statusText').textContent = 'API ma shaqeyneyo';
+        $('statusText').className = 'text-red-400';
+    }
+}
+
+checkApiStatus();
+setInterval(checkApiStatus, 10000);
+
+const uploadZone = $('uploadZone');
+const fileInput = $('fileInput');
+
+function handleFileSelect(e) {
+    const f = e.target.files[0];
+    if (f) processFile(f);
+}
+
+if (uploadZone) {
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const f = e.dataTransfer.files[0];
+        if (f) processFile(f);
+    });
+}
+
+function processFile(file) {
+    if (!file.type.startsWith('image/')) { alert('Fadlan soo gudbi sawir'); return; }
+    if (file.size > 10 * 1024 * 1024) { alert('Sawirku waa inuu ka yaraadaa 10MB'); return; }
+    state.file = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+        $('previewImage').src = e.target.result;
+        $('previewContainer').classList.remove('hidden');
+        $('actionButtons').classList.remove('hidden');
+        $('resultPlaceholder').classList.add('hidden');
+        $('resultContent').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearImage() {
+    state.file = null;
+    $('previewContainer').classList.add('hidden');
+    $('actionButtons').classList.add('hidden');
+    $('loadingSpinner').classList.add('hidden');
+    $('resultPlaceholder').classList.remove('hidden');
+    $('resultContent').classList.add('hidden');
+    if (fileInput) fileInput.value = '';
+}
+
+function showLoading(s) {
+    if (s) {
+        $('loadingSpinner').classList.remove('hidden');
+        $('actionButtons').style.opacity = '0.5';
+        $('actionButtons').style.pointerEvents = 'none';
+    } else {
+        $('loadingSpinner').classList.add('hidden');
+        $('actionButtons').style.opacity = '1';
+        $('actionButtons').style.pointerEvents = 'auto';
+    }
+}
+
+async function scanFace() {
+    if (!state.file) return;
+    showLoading(true);
+    try {
+        const fd = new FormData();
+        fd.append('file', state.file);
+        const r = await fetch(state.apiBase + '/scan-face/', { method: 'POST', body: fd });
+        const d = await r.json();
+        displayResults(d, 'scan');
+    } catch (e) {
+        displayError('Qalad: ' + e.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function detectFaces() {
+    if (!state.file) return;
+    showLoading(true);
+    try {
+        const fd = new FormData();
+        fd.append('file', state.file);
+        const r = await fetch(state.apiBase + '/detect-faces/', { method: 'POST', body: fd });
+        const d = await r.json();
+        displayResults(d, 'detect');
+    } catch (e) {
+        displayError('Qalad: ' + e.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayResults(data, type) {
+    $('resultPlaceholder').classList.add('hidden');
+    $('resultContent').classList.remove('hidden');
+    let sc = 'status-success', st = 'Guul';
+    if (data.status === 'warning') { sc = 'status-warning'; st = 'Digniin'; }
+    else if (data.status === 'error') { sc = 'status-error'; st = 'Qalad'; }
+    $('resultStatus').innerHTML = '<span class="status-badge ' + sc + '">' + st + '</span>';
+    $('resultMessage').textContent = data.message || '';
+    $('faceDetails').innerHTML = '';
+    if (data.faces && data.faces.length > 0) {
+        data.faces.forEach((f, i) => {
+            const p = f.position;
+            const pt = p.x !== undefined ? 'x:' + p.x + ' y:' + p.y + ' w:' + p.width + ' h:' + p.height : '';
+            const d = document.createElement('div');
+            d.className = 'face-box';
+            d.innerHTML = '<div class="flex items-center gap-3"><span class="face-number">' + (i+1) + '</span><span class="text-gray-300 text-sm">Weji #' + (i+1) + '</span></div><span class="text-gray-400 text-xs">' + pt + '</span>';
+            $('faceDetails').appendChild(d);
+        });
+    } else {
+        $('faceDetails').innerHTML = '<p class="text-gray-500 text-sm">Wax weji ah lama helin</p>';
+    }
+    if (type === 'detect' && data.image) {
+        $('detectedImageContainer').classList.remove('hidden');
+        $('detectedImage').src = data.image;
+    } else {
+        $('detectedImageContainer').classList.add('hidden');
+    }
+}
+
+function displayError(msg) {
+    $('resultPlaceholder').classList.add('hidden');
+    $('resultContent').classList.remove('hidden');
+    $('resultStatus').innerHTML = '<span class="status-badge status-error">Qalad</span>';
+    $('resultMessage').textContent = msg;
+    $('faceDetails').innerHTML = '';
+    $('detectedImageContainer').classList.add('hidden');
+}
+
+function logout() {
+    if (confirm('Ma rabtaa inaad ka baxdo?')) alert('Waad ka baxday!');
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && state.file && state.currentPage === 'scan') scanFace();
+    if (e.key === 'Escape') clearImage();
+    if (e.key === '1') showPage('dashboard');
+    if (e.key === '2') showPage('admin');
+    if (e.key === '3') showPage('officers');
+    if (e.key === '4') showPage('immigrants');
+    if (e.key === '5') showPage('countries');
+    if (e.key === '6') showPage('somaliland');
+    if (e.key === '7') showPage('offices');
+    if (e.key === '8') showPage('scan');
+});
+
+renderCountries();
+renderSomaliland();
+renderOffices();
+setTimeout(initCharts, 100);
+console.log('🚀 Diwaanka Ajaanibka waa diyaar!');
+</script>
+</body>
+</html>
