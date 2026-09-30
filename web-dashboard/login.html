@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Diwaanka Ajaanibka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="flex items-center justify-center min-h-screen p-4">
+    <div class="glass rounded-2xl p-8 w-full max-w-md">
+        
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-id-card text-white text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white">Diwaanka Ajaanibka</h1>
+            <p class="text-gray-400 text-sm mt-1">Ku soo dhawoow nidaamka</p>
+        </div>
+
+        <div id="errorMessage" class="error-message hidden mb-4"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-4">
+                <label class="block text-gray-400 text-sm mb-2">Magaca Isticmaalaha</label>
+                <input type="text" id="username" class="input-field" placeholder="admin" required />
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-400 text-sm mb-2">Furaha Sirta</label>
+                <input type="password" id="password" class="input-field" placeholder="••••••••" required />
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-login">
+                <span id="btnText">Gali</span>
+                <span id="btnSpinner" class="spinner hidden mx-auto"></span>
+            </button>
+        </form>
+
+        <div class="mt-6 p-4 bg-white/5 rounded-xl">
+            <p class="text-gray-400 text-xs mb-2">🔑 Demo Credentials:</p>
+            <p class="text-gray-300 text-xs">Admin: <span class="text-blue-400">admin</span> / <span class="text-blue-400">admin123</span></p>
+            <p class="text-gray-300 text-xs">Officer: <span class="text-emerald-400">officer</span> / <span class="text-emerald-400">officer123</span></p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://127.0.0.1:8000';
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        
+        errorDiv.classList.add('hidden');
+        loginBtn.disabled = true;
+        btnText.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+        
+        try {
+            const response = await fetch(`${API_URL}/token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            });
+            
+            if (!response.ok) throw new Error('Username ama password waa khaldan');
+            
+            const data = await response.json();
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'index.html';
+            
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.classList.remove('hidden');
+        } finally {
+            loginBtn.disabled = false;
+            btnText.classList.remove('hidden');
+            btnSpinner.classList.add('hidden');
+        }
+    }
+
+    const token = localStorage.getItem('access_token');
+    if (token) window.location.href = 'index.html';
+</script>
+
+</body>
+</html>

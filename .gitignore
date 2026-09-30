@@ -4,8 +4,18 @@ __pycache__/
 venv/
 env/
 *.log
+
+# VS Code
 .vs/
 .vscode/
+
+# Database
 *.db
 *.sqlite
+
+# Environment
 .env
+
+# OS
+Thumbs.db
+.DS_Store
