@@ -1,7 +1,6 @@
-﻿from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+﻿from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, Form, Header  # type: ignore[import-not-found]
 from fastapi.middleware.cors import CORSMiddleware
-from jose import JWTError, jwt
+from jose import JWTError, jwt  # type: ignore[import-not-found]
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
@@ -11,6 +10,33 @@ import base64
 import json
 import os
 
+
+class OAuth2PasswordBearer:
+    def __init__(self, tokenUrl: str):
+        self.tokenUrl = tokenUrl
+
+    async def __call__(self, authorization: Optional[str] = Header(default=None)):
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return authorization[7:].strip()
+
+
+class OAuth2PasswordRequestForm:
+    def __init__(
+        self,
+        username: str = Form(...),
+        password: str = Form(...),
+    ):
+        self.username = username
+        self.password = password
+
+# ============================================================
+# JWT CONFIGURATION
+# ============================================================
 SECRET_KEY = "diwaanka-ajaanibka-secret-key-2026-very-secure"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -40,6 +66,9 @@ USERS_DB = {
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
 def authenticate_user(username: str, password: str):
     user = USERS_DB.get(username)
     if not user:
@@ -55,7 +84,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -70,16 +100,29 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
+    
     user = USERS_DB.get(username)
     if user is None:
         raise credentials_exception
     return user
 
+async def get_current_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kaliya maamulayaasha ayaa geli kara"
+        )
+    return current_user
+
+# ============================================================
+# FASTAPI APP
+# ============================================================
 app = FastAPI(title="Diwaanka Ajaanibka API")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -96,13 +139,17 @@ def load_database():
             return json.load(f)
     return {"immigrants": [], "officers": [], "admins": [], "scan_history": []}
 
+def save_database(data):
+    with open(DB_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 @app.get("/")
 def home():
     return {"status": "success", "message": "Ku soo dhawaada API-ga Diwaanka Ajaanibka!"}
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "message": "API-ga waa shaqeynayaa si fiican"}
 
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -111,10 +158,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Username ama password waa khaldan",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["username"], "role": user["role"]},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta=access_token_expires
     )
     return {
         "access_token": access_token,
@@ -131,21 +180,61 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
     return {
         "username": current_user["username"],
         "full_name": current_user["full_name"],
+        "email": current_user["email"],
         "role": current_user["role"]
     }
 
 @app.post("/scan-face/")
 async def scan_face(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-    contents = await file.read()
-    nparr = np.frombuffer(contents, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-    return {
-        "status": "success",
-        "detected_faces": len(faces),
-        "message": f"Waxaa la helay {len(faces)} weji"
-    }
+    try:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Fadlan soo gudbi sawir sax ah")
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Sawirka lama akhrin karo")
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+        if len(faces) == 0:
+            return {"status": "warning", "detected_faces": 0, "faces": [], "message": "Wax weji ah lagama helin"}
+        faces_data = []
+        for i, (x, y, w, h) in enumerate(faces):
+            faces_data.append({
+                "face_number": i + 1,
+                "position": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)}
+            })
+        return {
+            "status": "success",
+            "detected_faces": len(faces),
+            "faces": faces_data,
+            "message": f"Waxaa la helay {len(faces)} weji"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Qalad dhacay: {str(e)}")
+
+@app.post("/detect-faces/")
+async def detect_faces(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Sawirka lama akhrin karo")
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 3)
+        _, buffer = cv2.imencode('.jpg', img)
+        img_base64 = base64.b64encode(buffer).decode('utf-8')
+        return {
+            "status": "success",
+            "detected_faces": len(faces),
+            "image": f"data:image/jpeg;base64,{img_base64}",
+            "message": f"Waxaa la helay {len(faces)} weji"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Qalad dhacay: {str(e)}")
 
 @app.get("/immigrants/")
 def get_immigrants(current_user: dict = Depends(get_current_user)):
@@ -161,6 +250,7 @@ def get_stats(current_user: dict = Depends(get_current_user)):
             "total_immigrants": len(db["immigrants"]),
             "total_officers": len(db["officers"]),
             "total_admins": len(db["admins"]),
+            "total_scans": len(db["scan_history"]),
             "total_countries": 197,
             "total_offices": 45
         }

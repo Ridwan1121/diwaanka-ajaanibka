@@ -15,3 +15,7 @@ env/
 
 # Environment
 .env
+
+# OS
+Thumbs.db
+.DS_Store
