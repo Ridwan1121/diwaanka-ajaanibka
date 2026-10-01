@@ -8,18 +8,20 @@ from datetime import datetime
 import os
 
 # Database URL (Supabase ama Local)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/diwaanka_ajaanibka"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL)
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///./diwaanka_ajaanibka.db"
+    print("⚠️  DATABASE_URL lama helin - SQLite ayaa la isticmaalayaa")
+else:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    print(f"✅ DATABASE_URL waa la helay: {DATABASE_URL[:30]}...")
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# ============================================================
-# MODELS
-# ============================================================
 class ImmigrantDB(Base):
     __tablename__ = "immigrants"
     id = Column(Integer, primary_key=True, index=True)
@@ -71,9 +73,6 @@ class ScanHistoryDB(Base):
     scanned_by = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-# ============================================================
-# INIT
-# ============================================================
 def init_db():
     Base.metadata.create_all(bind=engine)
 

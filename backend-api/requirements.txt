@@ -12,5 +12,3 @@ sqlalchemy
 psycopg2-binary
 alembic
 websockets
-dlib-bin
-face-recognition
