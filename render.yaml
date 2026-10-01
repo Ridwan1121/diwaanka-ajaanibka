@@ -1,0 +1,15 @@
+﻿services:
+  - type: web
+    name: diwaanka-ajaanibka
+    env: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: SECRET_KEY
+        value: diwaanka-ajaanibka-secret-key-2026
+      - key: DATABASE_URL
+        sync: false
