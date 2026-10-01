@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
@@ -19,11 +19,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 USERS_DB = {
-    "admin": {
-        "username": "admin",
-        "full_name": "Dr. Axmed Cali",
-        "email": "admin@diwaanka.so",
-        "hashed_password": pwd_context.hash("admin123"),
+    "Ridwan": {
+        "username": "Ridwan",
+        "full_name": "Ridwan Farah",
+        "email": "ridwan@diwaanka.so",
+        "hashed_password": pwd_context.hash("AKIID12345"),
         "role": "admin",
         "disabled": False
     },
