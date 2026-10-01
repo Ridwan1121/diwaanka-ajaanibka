@@ -87,7 +87,7 @@
                 </span>
                 <div class="flex items-center gap-3 bg-white/5 rounded-full px-4 py-2 border border-white/5">
                     <i class="fas fa-user-circle text-gray-400 text-xl"></i>
-                    <span class="text-sm text-gray-300">Admin</span>
+                    <span id="currentUser" class="text-sm text-gray-300">User</span>
                 </div>
             </div>
         </div>
@@ -527,6 +527,45 @@ const offices = [
 
 const state = { file: null, apiBase: 'https://diwaanka-ajaanibka.onrender.com', currentPage: 'dashboard' };
 
+document.body.style.visibility = 'hidden';
+
+async function verifySession() {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        window.location.replace('login.html');
+        return;
+    }
+
+    try {
+        const response = await fetch(state.apiBase + '/users/me', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        if (!response.ok) throw new Error('Session-ka wuu dhacay');
+        const user = await response.json();
+        $('currentUser').textContent = user.full_name || user.username;
+        document.body.style.visibility = 'visible';
+    } catch {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.replace('login.html');
+    }
+}
+
+verifySession();
+
+async function authenticatedFetch(path, options = {}) {
+    const token = localStorage.getItem('access_token');
+    const headers = new Headers(options.headers || {});
+    if (token) headers.set('Authorization', 'Bearer ' + token);
+    const response = await fetch(state.apiBase + path, { ...options, headers });
+    if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.replace('login.html');
+    }
+    return response;
+}
+
 function $(id) { return document.getElementById(id); }
 
 function showPage(page) {
@@ -687,8 +726,9 @@ async function scanFace() {
     try {
         const fd = new FormData();
         fd.append('file', state.file);
-        const r = await fetch(state.apiBase + '/scan-face/', { method: 'POST', body: fd });
+        const r = await authenticatedFetch('/scan-face/', { method: 'POST', body: fd });
         const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Scan-ku wuu fashilmay');
         displayResults(d, 'scan');
     } catch (e) {
         displayError('Qalad: ' + e.message);
@@ -703,8 +743,9 @@ async function detectFaces() {
     try {
         const fd = new FormData();
         fd.append('file', state.file);
-        const r = await fetch(state.apiBase + '/detect-faces/', { method: 'POST', body: fd });
+        const r = await authenticatedFetch('/detect-faces/', { method: 'POST', body: fd });
         const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Ogaanshaha wejigu wuu fashilmay');
         displayResults(d, 'detect');
     } catch (e) {
         displayError('Qalad: ' + e.message);
@@ -752,7 +793,9 @@ function displayError(msg) {
 }
 
 function logout() {
-    if (confirm('Ma rabtaa inaad ka baxdo?')) alert('Waad ka baxday!');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    window.location.replace('login.html');
 }
 
 document.addEventListener('keydown', e => {

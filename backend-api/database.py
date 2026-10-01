@@ -9,12 +9,14 @@ import os
 
 # Database URL (Supabase ama Local)
 raw_database_url = os.getenv("DATABASE_URL", "").strip()
+APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 
 if raw_database_url.startswith("3.12.0"):
-    raw_database_url = raw_database_url[len("3.12.0"):]
-    print("??  DATABASE_URL waxa laga saaray '3.12.0' oo horay u qaatay URL-ka")
+    raise RuntimeError("DATABASE_URL is malformed; remove the Python version prefix")
 
 if not raw_database_url:
+    if APP_ENV == "production":
+        raise RuntimeError("DATABASE_URL must be configured in production")
     DATABASE_URL = "sqlite:///./diwaanka_ajaanibka.db"
     print("??  DATABASE_URL lama helin - SQLite ayaa la isticmaalayaa")
 else:

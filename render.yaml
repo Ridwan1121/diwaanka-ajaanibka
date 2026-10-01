@@ -9,7 +9,17 @@
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
+      - key: APP_ENV
+        value: production
       - key: SECRET_KEY
-        value: diwaanka-ajaanibka-secret-key-2026
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: OFFICER_USERNAME
+        sync: false
+      - key: OFFICER_PASSWORD
+        sync: false
       - key: DATABASE_URL
         sync: false
