@@ -4,6 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from database import init_db, get_db, ImmigrantDB, OfficerDB, AdminDB, UserDB, ScanHistoryDB
+from face_service import face_service
+from liveness import liveness_detector
+from websocket_manager import manager
+from sqlalchemy.orm import Session
+from fastapi import WebSocket, WebSocketDisconnect
 from typing import Optional
 import cv2
 import numpy as np
@@ -76,6 +82,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 app = FastAPI(title="Diwaanka Ajaanibka API")
+
+# Init database
+init_db()
 
 app.add_middleware(
     CORSMiddleware,
@@ -169,4 +178,5 @@ def get_stats(current_user: dict = Depends(get_current_user)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
