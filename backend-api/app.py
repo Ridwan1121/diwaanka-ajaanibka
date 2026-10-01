@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
+﻿from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
@@ -24,7 +24,7 @@ USERS_DB = {
         "full_name": "Ridwan Farah",
         "email": "ridwan@diwaanka.so",
         "hashed_password": pwd_context.hash("AKIID12345"),
-        "role": "admin",
+        "role": "Ridwan",
         "disabled": False
     },
     "officer": {
@@ -169,3 +169,4 @@ def get_stats(current_user: dict = Depends(get_current_user)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
