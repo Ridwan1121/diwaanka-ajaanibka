@@ -8,14 +8,19 @@ from datetime import datetime
 import os
 
 # Database URL (Supabase ama Local)
-DATABASE_URL = os.getenv("DATABASE_URL")
+raw_database_url = os.getenv("DATABASE_URL", "").strip()
 
-if not DATABASE_URL:
+if raw_database_url.startswith("3.12.0"):
+    raw_database_url = raw_database_url[len("3.12.0"):]
+    print("⚠️  DATABASE_URL waxa laga saaray '3.12.0' oo horay u qaatay URL-ka")
+
+if not raw_database_url:
     DATABASE_URL = "sqlite:///./diwaanka_ajaanibka.db"
     print("⚠️  DATABASE_URL lama helin - SQLite ayaa la isticmaalayaa")
 else:
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    if raw_database_url.startswith("postgres://"):
+        raw_database_url = raw_database_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = raw_database_url
     print(f"✅ DATABASE_URL waa la helay: {DATABASE_URL[:30]}...")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
