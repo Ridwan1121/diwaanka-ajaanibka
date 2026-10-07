@@ -1,2 +1,1 @@
 -r backend-api/requirements.txt
-httpx2
