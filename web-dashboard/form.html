@@ -13,13 +13,12 @@
         .input-field:focus { outline: none; border-color: #3b82f6; background: rgba(59,130,246,0.1); }
         .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; padding: 14px; border-radius: 12px; font-weight: 600; width: 100%; border: none; cursor: pointer; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59,130,246,0.3); }
-        .error-message { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 12px; border-radius: 8px; font-size: 14px; }
-        .success-message { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 12px; border-radius: 8px; font-size: 14px; }
+        .error-message { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 12px; border-radius: 8px; }
+        .success-message { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; padding: 12px; border-radius: 8px; }
     </style>
 </head>
 <body>
 <div class="flex">
-    <!-- SIDEBAR -->
     <aside class="w-64 flex-shrink-0 hidden lg:block" style="background: rgba(10,14,26,0.95); border-right: 1px solid rgba(255,255,255,0.06); min-height: 100vh; position: sticky; top: 0;">
         <div class="p-6 border-b border-white/5">
             <div class="flex items-center gap-3">
@@ -35,12 +34,11 @@
         <nav class="p-4 space-y-1">
             <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-blue-500/10 hover:text-white transition"><i class="fas fa-chart-pie"></i> Dashboard</a>
             <a href="form.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20"><i class="fas fa-user-plus"></i> Diiwaangeli</a>
-            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-blue-500/10 hover:text-white transition"><i class="fas fa-users"></i> Ajaanibta</a>
+            <a href="edit.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-blue-500/10 hover:text-white transition"><i class="fas fa-edit"></i> Edit/Delete</a>
             <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-blue-500/10 hover:text-white transition"><i class="fas fa-camera"></i> Weji-Aqoonsi</a>
         </nav>
     </aside>
 
-    <!-- MAIN -->
     <main class="flex-1 p-4 lg:p-8">
         <div class="flex justify-between items-center mb-8">
             <div>
@@ -68,15 +66,15 @@
                     </div>
                     <div>
                         <label class="block text-gray-400 text-sm mb-2">Gobolka *</label>
-                        <input type="text" id="region" class="input-field" placeholder="Woqooyi Galbeed" required />
+                        <input type="text" id="region" class="input-field" placeholder="Banadir" required />
                     </div>
                     <div>
                         <label class="block text-gray-400 text-sm mb-2">Xudduudda Laga Soo Galay *</label>
-                        <input type="text" id="entry_point" class="input-field" placeholder="Wajaale" required />
+                        <input type="text" id="entry_point" class="input-field" placeholder="Aden Adde" required />
                     </div>
                     <div>
                         <label class="block text-gray-400 text-sm mb-2">Degmada *</label>
-                        <input type="text" id="district" class="input-field" placeholder="Hargeysa" required />
+                        <input type="text" id="district" class="input-field" placeholder="Hodan" required />
                     </div>
                     <div>
                         <label class="block text-gray-400 text-sm mb-2">Baasaboorka</label>
@@ -97,16 +95,13 @@
 </div>
 
 <script>
-    const API_URL = 'https://diwaanka-ajaanibka.onrender.com';
+    const API_URL = 'http://127.0.0.1:8000';
     const token = localStorage.getItem('access_token');
 
-    if (!token) {
-        window.location.href = 'login.html';
-    }
+    if (!token) window.location.href = 'login.html';
 
     async function handleSubmit(event) {
         event.preventDefault();
-
         const errorDiv = document.getElementById('errorMessage');
         const successDiv = document.getElementById('successMessage');
         errorDiv.classList.add('hidden');
@@ -134,7 +129,6 @@
 
             if (!response.ok) throw new Error('Qalad dhacay');
 
-            const result = await response.json();
             successDiv.textContent = '✅ Ajaanib cusub waa la diiwaangeliyay!';
             successDiv.classList.remove('hidden');
             resetForm();

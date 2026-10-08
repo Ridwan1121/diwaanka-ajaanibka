@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="so">
 <head>
     <meta charset="UTF-8" />
@@ -24,7 +24,6 @@
             padding: 14px 16px;
             border-radius: 12px;
             width: 100%;
-            transition: all 0.3s ease;
         }
         .input-field:focus {
             outline: none;
@@ -38,7 +37,6 @@
             border-radius: 12px;
             font-weight: 600;
             width: 100%;
-            transition: all 0.3s ease;
             border: none;
             cursor: pointer;
         }
@@ -65,6 +63,7 @@
             width: 20px;
             height: 20px;
             animation: spin 0.8s linear infinite;
+            display: inline-block;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -73,7 +72,6 @@
 
 <div class="flex items-center justify-center min-h-screen p-4">
     <div class="glass rounded-2xl p-8 w-full max-w-md">
-        
         <div class="text-center mb-8">
             <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-id-card text-white text-3xl"></i>
@@ -87,25 +85,28 @@
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="mb-4">
                 <label class="block text-gray-400 text-sm mb-2">Magaca Isticmaalaha</label>
-                <input type="text" id="username" class="input-field" placeholder="Magaca isticmaalaha" autocomplete="username" required />
+                <input type="text" id="username" class="input-field" placeholder="Ridwan" required />
             </div>
-            
             <div class="mb-6">
                 <label class="block text-gray-400 text-sm mb-2">Furaha Sirta</label>
-                <input type="password" id="password" class="input-field" placeholder="Furaha sirta" autocomplete="current-password" required />
+                <input type="password" id="password" class="input-field" placeholder="••••••••" required />
             </div>
-
             <button type="submit" id="loginBtn" class="btn-login">
                 <span id="btnText">Gali</span>
-                <span id="btnSpinner" class="spinner hidden mx-auto"></span>
+                <span id="btnSpinner" class="spinner hidden"></span>
             </button>
         </form>
 
+        <div class="mt-6 p-4 bg-white/5 rounded-xl">
+            <p class="text-gray-400 text-xs mb-2">🔑 Demo Credentials:</p>
+            <p class="text-gray-300 text-xs">Admin: <span class="text-blue-400">Ridwan</span> / <span class="text-blue-400">AKIID12345</span></p>
+            <p class="text-gray-300 text-xs">Officer: <span class="text-emerald-400">officer</span> / <span class="text-emerald-400">officer123</span></p>
+        </div>
     </div>
 </div>
 
 <script>
-    const API_URL = 'https://diwaanka-ajaanibka.onrender.com';
+    const API_URL = 'http://127.0.0.1:8000';
 
     async function handleLogin(event) {
         event.preventDefault();
@@ -146,26 +147,8 @@
         }
     }
 
-    async function redirectIfAuthenticated() {
-        // const token = localStorage.getItem('access_token');
-        if (!token) return;
-
-        try {
-            const response = await fetch(`${API_URL}/users/me`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (response.ok) {
-                window.location.replace('index.html');
-            } else if (response.status === 401) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('user');
-            }
-        } catch {
-            // Keep the current page if the API is temporarily unavailable.
-        }
-    }
-
-    redirectIfAuthenticated();
+    const token = localStorage.getItem('access_token');
+    if (token) window.location.href = 'index.html';
 </script>
 
 </body>
