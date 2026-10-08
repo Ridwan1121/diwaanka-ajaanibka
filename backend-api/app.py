@@ -1,6 +1,5 @@
 ﻿"""
-Diwaanka Ajaanibka - Backend API
-Face Recognition System for Immigration
+Diwaanka Ajaanibka - Backend API (DHAMAYSTIRAN)
 """
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -8,9 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 import cv2
 import numpy as np
@@ -18,10 +17,8 @@ import base64
 import json
 import os
 
-# Import database
 from database import init_db, get_db, ImmigrantDB, OfficerDB, AdminDB, UserDB, ScanHistoryDB
 
-# Import services
 try:
     from face_service import face_service
 except ImportError:
@@ -48,7 +45,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Environment
 APP_ENV = os.getenv("APP_ENV", "development")
 
 
@@ -126,13 +122,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 app = FastAPI(
     title="Diwaanka Ajaanibka API",
     description="API-ga weji-aqoonsiga ee hay'adda socdaalka",
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# Init database
 init_db()
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -143,16 +137,16 @@ app.add_middleware(
 
 
 # ============================================================
-# MODELS (Pydantic)
+# MODELS
 # ============================================================
 class Immigrant(BaseModel):
-    name: str
-    country: str
-    region: str
-    entry_point: str
-    district: str
+    name: str = Field(..., min_length=2, max_length=100)
+    country: str = Field(..., min_length=2, max_length=100)
+    region: str = Field(..., min_length=2, max_length=100)
+    entry_point: str = Field(..., min_length=2, max_length=100)
+    district: str = Field(..., min_length=2, max_length=100)
     passport: Optional[str] = None
-    status: str = "registered"
+    status: str = Field("registered", pattern="^(registered|pending|approved|rejected)$")
 
 
 class Officer(BaseModel):
@@ -178,12 +172,15 @@ def home():
     return {
         "status": "success",
         "message": "Ku soo dhawaada API-ga Diwaanka Ajaanibka!",
+        "version": "2.0.0",
         "endpoints": {
             "/health": "Hubi haddii API-gu shaqeynayo",
             "/token": "Login - hel JWT token",
             "/users/me": "Macluumaadka isticmaalaha",
             "/scan-face/": "Aqoonso wejiyada sawirka",
             "/detect-faces/": "Soo bandhig wejiyada sawirka",
+            "/register-face/{immigrant_id}": "Diiwaangeli wejiga ajaanib",
+            "/check-liveness/": "Hubi haddii sawirku yahay qof nool",
             "/immigrants/": "Liiska ajaanibta",
             "/stats/": "Tirakoobka nidaamka"
         }
@@ -244,9 +241,7 @@ async def scan_face(file: UploadFile = File(...), current_user: dict = Depends(g
         if img is None:
             raise HTTPException(status_code=400, detail="Sawirka lama akhrin karo")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(
-            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        )
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         if len(faces) == 0:
             return {"status": "warning", "detected_faces": 0, "faces": [], "message": "Wax weji ah lagama helin"}
@@ -275,9 +270,7 @@ async def detect_faces(file: UploadFile = File(...), current_user: dict = Depend
         if img is None:
             raise HTTPException(status_code=400, detail="Sawirka lama akhrin karo")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face_cascade = cv2.CascadeClassifier(
-            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        )
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         for (x, y, w, h) in faces:
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 3)
@@ -337,11 +330,7 @@ async def check_liveness(file: UploadFile = File(...), current_user: dict = Depe
 @app.get("/immigrants/")
 def get_immigrants(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     immigrants = db.query(ImmigrantDB).all()
-    return {
-        "status": "success",
-        "total": len(immigrants),
-        "immigrants": immigrants
-    }
+    return {"status": "success", "total": len(immigrants), "immigrants": immigrants}
 
 
 @app.post("/immigrants/")
@@ -412,9 +401,6 @@ async def websocket_endpoint(websocket: WebSocket):
             manager.disconnect(websocket)
 
 
-# ============================================================
-# RUN
-# ============================================================
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Diwaanka Ajaanibka - Dashboard</title>
+    <title>Diwaanka Ajaanibka - Dashboard v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,17 +19,28 @@
         .stat-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-4px); }
         .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .page-content { display: none; }
-        .page-content.active { display: block; }
+        .page-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .table-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .table-row { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s ease; }
         .table-row:hover { background: rgba(255,255,255,0.03); }
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-success { background: rgba(34,197,94,0.2); color: #22c55e; }
         .badge-warning { background: rgba(234,179,8,0.2); color: #eab308; }
+        .badge-danger { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+        .modal.hidden { display: none; }
+        .modal-content { background: #141829; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; }
+        .input-field { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px 16px; border-radius: 12px; width: 100%; transition: all 0.2s ease; }
+        .input-field:focus { outline: none; border-color: #3b82f6; background: rgba(59,130,246,0.1); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 10px; }
+        .btn { padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: all 0.2s ease; border: none; cursor: pointer; }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(59,130,246,0.3); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
     </style>
 </head>
 <body>
@@ -43,15 +54,14 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white">Diwaanka</h1>
-                    <p class="text-xs text-gray-500">Ajaanibka System</p>
+                    <p class="text-xs text-gray-500">v2.0 - Dynamic</p>
                 </div>
             </div>
         </div>
         <nav class="p-4 space-y-1">
             <a class="sidebar-link active" data-page="dashboard" onclick="showPage('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</a>
-            <a class="sidebar-link" data-page="admin" onclick="showPage('admin')"><i class="fas fa-user-shield"></i> Maamulka Sare</a>
-            <a class="sidebar-link" data-page="officers" onclick="showPage('officers')"><i class="fas fa-user-tie"></i> Askarta Goobta</a>
             <a class="sidebar-link" data-page="immigrants" onclick="showPage('immigrants')"><i class="fas fa-users"></i> Ajaanibta</a>
+            <a class="sidebar-link" data-page="add" onclick="showPage('add')"><i class="fas fa-user-plus"></i> Diiwaangeli</a>
             <a class="sidebar-link" data-page="countries" onclick="showPage('countries')"><i class="fas fa-globe-africa"></i> Wadamada</a>
             <a class="sidebar-link" data-page="somaliland" onclick="showPage('somaliland')"><i class="fas fa-map-marked-alt"></i> Somaliland</a>
             <a class="sidebar-link" data-page="offices" onclick="showPage('offices')"><i class="fas fa-building"></i> Xafiisyada</a>
@@ -81,9 +91,9 @@
             </div>
         </div>
 
-        <!-- PAGE: DASHBOARD -->
+        <!-- DASHBOARD -->
         <div id="page-dashboard" class="page-content active">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
@@ -114,47 +124,37 @@
                 <div class="stat-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-400 text-sm">Wadamada</p>
-                            <p class="text-3xl font-bold text-white mt-1" id="totalCountries">197</p>
+                            <p class="text-gray-400 text-sm">Scans</p>
+                            <p class="text-3xl font-bold text-white mt-1" id="totalScans">0</p>
                         </div>
-                        <div class="stat-icon bg-purple-500/10 text-purple-400"><i class="fas fa-globe"></i></div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-400 text-sm">Xafiisyada</p>
-                            <p class="text-3xl font-bold text-white mt-1" id="totalOffices">45</p>
-                        </div>
-                        <div class="stat-icon bg-cyan-500/10 text-cyan-400"><i class="fas fa-building"></i></div>
+                        <div class="stat-icon bg-purple-500/10 text-purple-400"><i class="fas fa-camera"></i></div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass p-6">
-                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-line text-blue-400 mr-2"></i>Soo Galitaanka Toddobaadka</h3>
+                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-line text-blue-400 mr-2"></i>Soo Galitaanka</h3>
                     <canvas id="weeklyChart" height="200"></canvas>
                 </div>
                 <div class="glass p-6">
-                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-pie text-purple-400 mr-2"></i>Wadamada Ugu Badan</h3>
+                    <h3 class="text-white font-semibold mb-4"><i class="fas fa-chart-pie text-purple-400 mr-2"></i>Wadamada</h3>
                     <canvas id="countryChart" height="200"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- PAGE: IMMIGRANTS -->
+        <!-- IMMIGRANTS -->
         <div id="page-immigrants" class="page-content">
             <div class="glass p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-white">Liiska Ajaanibta</h3>
-                    <button onclick="loadImmigrants()" class="flex items-center gap-2 bg-blue-500/20 text-blue-400 px-4 py-2 rounded-xl hover:bg-blue-500/30 transition">
+                    <button onclick="loadImmigrants()" class="btn btn-primary">
                         <i class="fas fa-sync"></i> Cusbooneysii
                     </button>
                 </div>
                 <div id="loadingImmigrants" class="text-center py-8 hidden">
                     <div class="spinner"></div>
-                    <p class="text-gray-400 mt-3">Fadlan sug...</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -164,20 +164,36 @@
                                 <th class="pb-3 text-gray-400 text-sm">Magac</th>
                                 <th class="pb-3 text-gray-400 text-sm">Dalka</th>
                                 <th class="pb-3 text-gray-400 text-sm">Gobolka</th>
-                                <th class="pb-3 text-gray-400 text-sm">Xudduudda</th>
                                 <th class="pb-3 text-gray-400 text-sm">Degmada</th>
                                 <th class="pb-3 text-gray-400 text-sm">Status</th>
+                                <th class="pb-3 text-gray-400 text-sm">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="immigrantsTable">
-                            <tr><td colspan="7" class="text-center py-8 text-gray-500">Fadlan sug...</td></tr>
-                        </tbody>
+                        <tbody id="immigrantsTable"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- PAGE: COUNTRIES -->
+        <!-- ADD IMMIGRANT -->
+        <div id="page-add" class="page-content">
+            <div class="glass p-6 max-w-2xl">
+                <h3 class="text-lg font-semibold text-white mb-4">Diiwaangeli Ajaanib Cusub</h3>
+                <form id="addForm" onsubmit="addImmigrant(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="addName" class="input-field" placeholder="Magaca *" required />
+                        <input type="text" id="addCountry" class="input-field" placeholder="Dalka *" required />
+                        <input type="text" id="addRegion" class="input-field" placeholder="Gobolka *" required />
+                        <input type="text" id="addEntryPoint" class="input-field" placeholder="Xudduudda *" required />
+                        <input type="text" id="addDistrict" class="input-field" placeholder="Degmada *" required />
+                        <input type="text" id="addPassport" class="input-field" placeholder="Baasaboorka" />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mt-4">Diiwaangeli</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- COUNTRIES -->
         <div id="page-countries" class="page-content">
             <div class="glass p-6">
                 <h3 class="text-lg font-semibold text-white mb-4">Wadamada Adduunka (197)</h3>
@@ -185,7 +201,7 @@
             </div>
         </div>
 
-        <!-- PAGE: SOMALILAND -->
+        <!-- SOMALILAND -->
         <div id="page-somaliland" class="page-content">
             <div class="glass p-6">
                 <h3 class="text-lg font-semibold text-white mb-4">Gobollada Somaliland</h3>
@@ -193,7 +209,7 @@
             </div>
         </div>
 
-        <!-- PAGE: OFFICES -->
+        <!-- OFFICES -->
         <div id="page-offices" class="page-content">
             <div class="glass p-6">
                 <h3 class="text-lg font-semibold text-white mb-4">Xafiisyada</h3>
@@ -201,12 +217,12 @@
             </div>
         </div>
 
-        <!-- PAGE: SCAN -->
+        <!-- SCAN -->
         <div id="page-scan" class="page-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass p-6">
                     <h3 class="text-lg font-semibold text-white mb-4">Weji-Aqoonsi</h3>
-                    <div id="uploadZone" class="border-2 border-dashed border-white/15 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 transition">
+                    <div id="uploadZone" class="border-2 border-dashed border-white/15 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 transition" onclick="document.getElementById('fileInput').click()">
                         <div class="flex flex-col items-center gap-3">
                             <div class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
                                 <i class="fas fa-cloud-upload-alt text-blue-400 text-3xl"></i>
@@ -217,11 +233,11 @@
                     </div>
                     <div id="previewContainer" class="hidden mt-4">
                         <img id="previewImage" class="w-full max-h-80 object-contain rounded-xl" />
-                        <button onclick="clearImage()" class="mt-2 w-full bg-red-500/20 text-red-400 py-2 rounded-xl">Nadiifi</button>
+                        <button onclick="clearImage()" class="btn btn-danger w-full mt-2">Nadiifi</button>
                     </div>
                     <div id="actionButtons" class="hidden flex gap-3 mt-4">
-                        <button onclick="scanFace()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl">Aqoonso</button>
-                        <button onclick="detectFaces()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl">Soo Bandhig</button>
+                        <button onclick="scanFace()" class="btn btn-primary flex-1">Aqoonso</button>
+                        <button onclick="detectFaces()" class="btn btn-primary flex-1">Soo Bandhig</button>
                     </div>
                     <div id="loadingSpinner" class="hidden mt-4 text-center py-4">
                         <div class="spinner"></div>
@@ -231,7 +247,7 @@
                     <h3 class="text-lg font-semibold text-white mb-4">Natiijooyinka</h3>
                     <div id="resultPlaceholder" class="text-center py-12 text-gray-500">
                         <i class="fas fa-image text-4xl mb-4"></i>
-                        <p>Sawir soo gal si aad u aragto natiijooyinka</p>
+                        <p>Sawir soo gal</p>
                     </div>
                     <div id="resultContent" class="hidden">
                         <div id="resultStatus" class="mb-4"></div>
@@ -247,6 +263,31 @@
     </main>
 </div>
 
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-white">Edit Ajaanib</h3>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="editForm" onsubmit="updateImmigrant(event)">
+            <input type="hidden" id="editId" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="editName" class="input-field" placeholder="Magaca *" required />
+                <input type="text" id="editCountry" class="input-field" placeholder="Dalka *" required />
+                <input type="text" id="editRegion" class="input-field" placeholder="Gobolka *" required />
+                <input type="text" id="editEntryPoint" class="input-field" placeholder="Xudduudda *" required />
+                <input type="text" id="editDistrict" class="input-field" placeholder="Degmada *" required />
+                <input type="text" id="editPassport" class="input-field" placeholder="Baasaboorka" />
+            </div>
+            <div class="flex gap-3 mt-4">
+                <button type="submit" class="btn btn-primary flex-1">Cusbooneysii</button>
+                <button type="button" onclick="closeEditModal()" class="btn flex-1 bg-white/5 text-gray-300">Jooji</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 // ============================================================
 // API CONFIGURATION
@@ -259,10 +300,7 @@ const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 // AUTHENTICATION
 // ============================================================
 function checkAuth() {
-    if (!authToken) {
-        window.location.href = 'login.html';
-        return false;
-    }
+    if (!authToken) { window.location.href = 'login.html'; return false; }
     return true;
 }
 
@@ -284,10 +322,7 @@ async function apiFetch(endpoint, options = {}) {
             ...options.headers
         }
     });
-    if (response.status === 401) {
-        logout();
-        return null;
-    }
+    if (response.status === 401) { logout(); return null; }
     return response;
 }
 
@@ -299,17 +334,12 @@ async function loadStats() {
         const response = await apiFetch('/stats/');
         if (!response) return;
         const data = await response.json();
-        
         document.getElementById('totalImmigrants').textContent = data.stats.total_immigrants || 0;
         document.getElementById('totalOfficers').textContent = data.stats.total_officers || 0;
         document.getElementById('totalAdmins').textContent = data.stats.total_admins || 0;
-        document.getElementById('totalCountries').textContent = data.stats.total_countries || 197;
-        document.getElementById('totalOffices').textContent = data.stats.total_offices || 45;
-        
+        document.getElementById('totalScans').textContent = data.stats.total_scans || 0;
         console.log('✅ Stats:', data.stats);
-    } catch (error) {
-        console.error('❌ Qalad:', error);
-    }
+    } catch (error) { console.error('❌ Qalad:', error); }
 }
 
 // ============================================================
@@ -318,7 +348,6 @@ async function loadStats() {
 async function loadImmigrants() {
     const table = document.getElementById('immigrantsTable');
     const loading = document.getElementById('loadingImmigrants');
-    
     if (loading) loading.classList.remove('hidden');
     if (table) table.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">Fadlan sug...</td></tr>';
     
@@ -326,7 +355,6 @@ async function loadImmigrants() {
         const response = await apiFetch('/immigrants/');
         if (!response) return;
         const data = await response.json();
-        
         if (loading) loading.classList.add('hidden');
         
         if (table) {
@@ -337,16 +365,18 @@ async function loadImmigrants() {
                         <td class="py-3 text-white">${i.name}</td>
                         <td class="py-3 text-gray-300">${i.country}</td>
                         <td class="py-3 text-gray-300">${i.region}</td>
-                        <td class="py-3 text-gray-300">${i.entry_point}</td>
                         <td class="py-3 text-gray-300">${i.district}</td>
                         <td class="py-3"><span class="badge badge-success">${i.status}</span></td>
+                        <td class="py-3">
+                            <button onclick="openEditModal(${i.id}, '${i.name}', '${i.country}', '${i.region}', '${i.entry_point}', '${i.district}', '${i.passport || ''}')" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteImmigrant(${i.id}, '${i.name}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                        </td>
                     </tr>
                 `).join('');
             } else {
                 table.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">Ma jiro ajaanib</td></tr>';
             }
         }
-        console.log('✅ Ajaanibta:', data.total);
     } catch (error) {
         console.error('❌ Qalad:', error);
         if (loading) loading.classList.add('hidden');
@@ -355,21 +385,96 @@ async function loadImmigrants() {
 }
 
 // ============================================================
+// ADD IMMIGRANT
+// ============================================================
+async function addImmigrant(event) {
+    event.preventDefault();
+    const data = {
+        name: document.getElementById('addName').value,
+        country: document.getElementById('addCountry').value,
+        region: document.getElementById('addRegion').value,
+        entry_point: document.getElementById('addEntryPoint').value,
+        district: document.getElementById('addDistrict').value,
+        passport: document.getElementById('addPassport').value || null,
+        status: 'registered'
+    };
+    
+    try {
+        const response = await apiFetch('/immigrants/', { method: 'POST', body: JSON.stringify(data) });
+        if (!response) return;
+        const result = await response.json();
+        alert('✅ Ajaanib cusub waa la diiwaangeliyay!');
+        document.getElementById('addForm').reset();
+        showPage('immigrants');
+    } catch (error) { alert('❌ Qalad: ' + error.message); }
+}
+
+// ============================================================
+// UPDATE IMMIGRANT
+// ============================================================
+function openEditModal(id, name, country, region, entryPoint, district, passport) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editCountry').value = country;
+    document.getElementById('editRegion').value = region;
+    document.getElementById('editEntryPoint').value = entryPoint;
+    document.getElementById('editDistrict').value = district;
+    document.getElementById('editPassport').value = passport;
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+async function updateImmigrant(event) {
+    event.preventDefault();
+    const id = document.getElementById('editId').value;
+    const data = {
+        name: document.getElementById('editName').value,
+        country: document.getElementById('editCountry').value,
+        region: document.getElementById('editRegion').value,
+        entry_point: document.getElementById('editEntryPoint').value,
+        district: document.getElementById('editDistrict').value,
+        passport: document.getElementById('editPassport').value || null,
+        status: 'registered'
+    };
+    
+    try {
+        const response = await apiFetch(`/immigrants/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+        if (!response) return;
+        alert('✅ Ajaanib waa la cusbooneysiiyay!');
+        closeEditModal();
+        loadImmigrants();
+    } catch (error) { alert('❌ Qalad: ' + error.message); }
+}
+
+// ============================================================
+// DELETE IMMIGRANT
+// ============================================================
+async function deleteImmigrant(id, name) {
+    if (!confirm(`Ma hubtaa inaad tirtirto "${name}"?`)) return;
+    try {
+        const response = await apiFetch(`/immigrants/${id}`, { method: 'DELETE' });
+        if (!response) return;
+        alert('✅ Ajaanib waa la tirtiray!');
+        loadImmigrants();
+    } catch (error) { alert('❌ Qalad: ' + error.message); }
+}
+
+// ============================================================
 // PAGE NAVIGATION
 // ============================================================
 function showPage(page) {
     document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-    
     const target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
-    
     const link = document.querySelector(`.sidebar-link[data-page="${page}"]`);
     if (link) link.classList.add('active');
     
     const titles = {
         dashboard: ['Dashboard', 'Ku soo dhawaada nidaamka'],
         immigrants: ['Ajaanibta', 'Liiska ajaanibta'],
+        add: ['Diiwaangeli', 'Ku dar ajaanib cusub'],
         countries: ['Wadamada', '197 wadan'],
         somaliland: ['Somaliland', '6 gobol'],
         offices: ['Xafiisyada', 'Liiska xafiisyada'],
@@ -381,8 +486,6 @@ function showPage(page) {
     
     if (page === 'dashboard') loadStats();
     if (page === 'immigrants') loadImmigrants();
-    
-    console.log('📄 Page:', page);
 }
 
 // ============================================================
@@ -393,7 +496,6 @@ let state = { file: null };
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
     state.file = file;
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -415,19 +517,15 @@ function clearImage() {
 
 async function scanFace() {
     if (!state.file) return;
-    
     document.getElementById('loadingSpinner').classList.remove('hidden');
-    
     const formData = new FormData();
     formData.append('file', state.file);
-    
     try {
         const response = await fetch(`${API_URL}/scan-face/`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken}` },
             body: formData
         });
-        
         const data = await response.json();
         document.getElementById('loadingSpinner').classList.add('hidden');
         document.getElementById('resultPlaceholder').classList.add('hidden');
@@ -443,19 +541,15 @@ async function scanFace() {
 
 async function detectFaces() {
     if (!state.file) return;
-    
     document.getElementById('loadingSpinner').classList.remove('hidden');
-    
     const formData = new FormData();
     formData.append('file', state.file);
-    
     try {
         const response = await fetch(`${API_URL}/detect-faces/`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken}` },
             body: formData
         });
-        
         const data = await response.json();
         document.getElementById('loadingSpinner').classList.add('hidden');
         document.getElementById('resultPlaceholder').classList.add('hidden');
@@ -463,7 +557,6 @@ async function detectFaces() {
         document.getElementById('resultStatus').innerHTML = `<span class="badge badge-success">${data.status}</span>`;
         document.getElementById('resultMessage').textContent = data.message;
         document.getElementById('faceDetails').innerHTML = `Waxaa la helay ${data.detected_faces} weji`;
-        
         if (data.image) {
             document.getElementById('detectedImageContainer').classList.remove('hidden');
             document.getElementById('detectedImage').src = data.image;
@@ -565,7 +658,6 @@ function initCharts() {
             options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } } } }
         });
     }
-    
     const cc = document.getElementById('countryChart')?.getContext('2d');
     if (cc) {
         if (countryChart) countryChart.destroy();
@@ -590,9 +682,7 @@ async function checkApiStatus() {
             document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
             document.getElementById('statusText').textContent = 'API waa shaqeynayaa';
             document.getElementById('statusText').className = 'text-emerald-400';
-        } else {
-            throw new Error();
-        }
+        } else { throw new Error(); }
     } catch (error) {
         document.getElementById('statusDot').className = 'w-2 h-2 rounded-full bg-red-500';
         document.getElementById('statusText').textContent = 'API ma shaqeyneyo';
@@ -605,10 +695,8 @@ async function checkApiStatus() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     if (!checkAuth()) return;
-    
     const userRole = document.getElementById('userRole');
     if (userRole) userRole.textContent = currentUser.full_name || 'Admin';
-    
     renderCountries();
     renderSomaliland();
     renderOffices();
@@ -616,8 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     checkApiStatus();
     setInterval(checkApiStatus, 10000);
-    
-    console.log('🚀 Dashboard waa diyaar!');
+    console.log('🚀 Dashboard v2.0 waa diyaar!');
 });
 </script>
 </body>
